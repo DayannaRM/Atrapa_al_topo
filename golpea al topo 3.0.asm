@@ -100,6 +100,7 @@
     comparar_fila     db 0
     comparar_columna  db 0
     
+    comparar3 db 1
     
     
     
@@ -208,6 +209,41 @@
         int 10h 
         
     endm
+    
+    imprimir_estd_tres macro c1,p1a,p1b,c2,p2a,p2b,c3,p3a,p3b
+        mov_cursor 14,6 
+       imprimir estad
+       
+       mov_cursor 10,9
+       imprimir estad_jp
+          
+       
+       mov_cursor 10,11
+       imprimir_caracter c1
+       mov_cursor 21,11
+       imprimir_puntaje p1a
+       mov_cursor 22,11
+       imprimir_puntaje p1b
+        
+       
+       mov_cursor 10,13
+       imprimir_caracter c2
+       mov_cursor 21,13
+       imprimir_puntaje p2a
+       mov_cursor 22,13
+       imprimir_puntaje p2b
+       
+       mov_cursor 10,15
+       imprimir_caracter c3
+       mov_cursor 21,15
+       imprimir_puntaje p3a
+       mov_cursor 22,15
+       imprimir_puntaje p3b
+       
+    
+       mov_cursor 5,18
+       imprimir op_end
+   endm 
         
 inicio:
     mov dx,@data
@@ -1053,10 +1089,10 @@ sumar_niveles:
     
 comparar_pase_todos_jugadores:
 
-    cmp var_cant,02h
+    cmp var_cant,32h
     je  comparar_pase_dos_jugadores
     
-    cmp var_cant,03h
+    cmp var_cant,33h
     je  comparar_pase_tres_jugadores 
     
     
@@ -1206,15 +1242,183 @@ gana_jugador2_dos_jugadores:
 
 
 
+comparar_puntajes_tres:
 
+    cmp comparar3,01h
+    je  pos_123
+    
+    cmp comparar3,02h
+    je  pos_132
+    
+    cmp comparar3,03h
+    je  pos_213            
+    
+    cmp comparar3,04h
+    je  pos_231
+    
+    cmp comparar3,05h
+    je  pos_312   
+    
+    cmp comparar3,06h
+    je  pos_321
+   
+    
+comparar_1y2:
+    mov al,puntaje2c
+                 
+    cmp puntaje1c,al     
+    jle  comparar_puntajes_tres 
+    
+    ret
+comparar_2y3:    
+    mov al,puntaje3c
+                 
+    cmp puntaje2c,al     
+    jle  comparar_puntajes_tres
+    
+    ret
+comparar_1y3:
 
+    mov al,puntaje3c
+                 
+    cmp puntaje1c,al     
+    jle  comparar_puntajes_tres
+    
+    ret 
+    
+comparar_2y1:
 
+    mov al,puntaje1c
+                 
+    cmp puntaje2c,al     
+    jle  comparar_puntajes_tres
+    
+    ret
+    
+comparar_3y2:
 
+    mov al,puntaje2c
+                 
+    cmp puntaje3c,al     
+    jle  comparar_puntajes_tres
+    
+    ret 
+    
+comparar_3y1:
 
+    mov al,puntaje1c
+                 
+    cmp puntaje3c,al     
+    jle  comparar_puntajes_tres
+    
+    ret    
+         
+pos_123:
+    add comparar3,1
+    call comparar_1y2
+    call comparar_2y3
+    call comparar_1y3
+    
+    jmp imprimir_123     
+    
+     
+imprimir_123:
+   limpiar_pantalla 0fh
+   imprimir_estd_tres car1,puntaje1a,puntaje1b,car2,puntaje2a,puntaje2b,car3,puntaje3a,puntaje3b 
+   
+   jmp esperar_letra_fin_juego
+   
+;***************************    
 
+pos_132:
+    add comparar3,1
+    call comparar_1y3
+    call comparar_3y2
+    call comparar_1y2
+    
+    jmp imprimir_132     
+    
+     
+imprimir_132:
+   limpiar_pantalla 0fh
+   imprimir_estd_tres car1,puntaje1a,puntaje1b,car3,puntaje3a,puntaje3b,car2,puntaje2a,puntaje2b 
+    
+   jmp esperar_letra_fin_juego 
+    
+;***************************    
 
+pos_213:
+    add  comparar3,1
+    call comparar_2y1
+    call comparar_1y3
+    call comparar_2y3
+    
+    jmp imprimir_213     
+    
+     
+imprimir_213:
+   limpiar_pantalla 0fh
+   imprimir_estd_tres car2,puntaje2a,puntaje2b,car1,puntaje1a,puntaje1b,car3,puntaje3a,puntaje3b 
+   
+   jmp esperar_letra_fin_juego
+        
+;***************************    
 
+pos_231:
+    add  comparar3,1
+    call comparar_2y3
+    call comparar_3y1
+    call comparar_2y1
+    
+    jmp imprimir_231     
+    
+     
+imprimir_231:
+   limpiar_pantalla 0fh
+   imprimir_estd_tres car2,puntaje2a,puntaje2b,car3,puntaje3a,puntaje3b,car1,puntaje1a,puntaje1b 
+   
+   jmp esperar_letra_fin_juego
+   
+;***************************    
 
+pos_312:
+    add  comparar3,1
+    call comparar_3y1
+    call comparar_3y2
+    call comparar_3y2
+    
+    jmp imprimir_312     
+    
+     
+imprimir_312:
+   limpiar_pantalla 0fh
+   imprimir_estd_tres car3,puntaje3a,puntaje3b,car1,puntaje1a,puntaje1b,car2,puntaje2a,puntaje2b 
+
+   jmp esperar_letra_fin_juego
+   
+;***************************    
+
+pos_321:
+    add  comparar3,1
+    call comparar_3y2
+    call comparar_2y1
+    call comparar_3y1
+    
+    jmp imprimir_321    
+    
+     
+imprimir_321:
+   limpiar_pantalla 0fh
+   imprimir_estd_tres car3,puntaje3a,puntaje3b,car2,puntaje2a,puntaje2b,car1,puntaje1a,puntaje1b 
+   
+   jmp esperar_letra_fin_juego                  
+
+;; 123.
+;; 132.
+;; 213.
+;; 231.
+;; 312
+;; 321
 
 
 
