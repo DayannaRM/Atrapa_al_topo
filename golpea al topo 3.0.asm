@@ -23,7 +23,7 @@
     player2        db 0
     player3        db 0
     
-    cop_player1    db 1              ;Guardan cual jugador esta en turno copias de player
+    cop_player1    db 1             ;Guardan cual jugador esta en turno copias de player
     cop_player2    db 0              ;para saber a quien sumarle puntos
     cop_player3    db 0
     
@@ -46,6 +46,11 @@
     estad_JP       db        "Jugador    Puntaje","$"
     empata2        db          "Juego empatado","$"
     op_end         db   "Salir:S   Volver a jugar:V","$"
+    
+    reset          db   "Nivel que desea resetear:","$"
+    
+    rendir1        db   "El jugador 1 se ha rendido","$"
+    rendir2        db   "El jugador 2 se ha rendido","$"
          
     car1           db ?              ;Guarda caracter de jugador 1
     car2           db ?              ;Guarda caracter de jugador 2
@@ -54,15 +59,17 @@
     puntaje1a       db 0       ;Se crean variables puntaje
     puntaje1b       db 0
     puntaje1c       db 0
+    puntaje1d       db 0
     
     puntaje2a       db 0       ;Se crean variables puntaje
     puntaje2b       db 0
     puntaje2c       db 0
+    puntaje2d       db 0
     
     puntaje3a       db 0       ;Se crean variables puntaje
     puntaje3b       db 0
     puntaje3c       db 0
-    
+    puntaje3d       db 0
         
     var_cant       db ?              ;Guarda el numero de jugadores 
                                   
@@ -192,12 +199,7 @@
         int 21h
     endm 
     
-    imprimir_puntaje macro var_puntaje
-        mov  dl,var_puntaje
-        add dl,30h
-        mov ah,02
-	    int 21h
-    endm 
+
          
     imprimir_caracter macro caracter 
         
@@ -209,41 +211,39 @@
         int 10h 
         
     endm
-    
-    imprimir_estd_tres macro c1,p1a,p1b,c2,p2a,p2b,c3,p3a,p3b
-        mov_cursor 14,6 
-       imprimir estad
-       
-       mov_cursor 10,9
-       imprimir estad_jp
-          
-       
-       mov_cursor 10,11
-       imprimir_caracter c1
-       mov_cursor 21,11
-       imprimir_puntaje p1a
-       mov_cursor 22,11
-       imprimir_puntaje p1b
+     
+   
+   imprimir_puntaje_magenta macro var 
         
-       
-       mov_cursor 10,13
-       imprimir_caracter c2
-       mov_cursor 21,13
-       imprimir_puntaje p2a
-       mov_cursor 22,13
-       imprimir_puntaje p2b
-       
-       mov_cursor 10,15
-       imprimir_caracter c3
-       mov_cursor 21,15
-       imprimir_puntaje p3a
-       mov_cursor 22,15
-       imprimir_puntaje p3b
-       
-    
-       mov_cursor 5,18
-       imprimir op_end
+      mov ah, 09h 
+      mov bx, 0dh
+      mov cx, 01h  
+      mov al, var
+      add al, 30h   
+      int 10h
+   endm  
+
+   imprimir_puntaje macro var_puntaje
+        mov  dl,var_puntaje
+        add dl,30h
+        mov ah,02
+	    int 21h
    endm 
+   
+   
+   imprimir_caracter_magenta macro caracter 
+        
+        mov ah, 09h             ;Imprime un caracter
+        mov al, caracter        ;Caracter ascii del topo
+        mov bh, 00h             ;Pagina del modo texto
+        mov bl, 0dh             ;Color del caracter a imprimir
+        mov cx, 01              ;Cantidad de veces a imprimir el caracter
+        int 10h 
+        
+    endm
+ 
+ 
+   
         
 inicio:
     mov dx,@data
@@ -330,14 +330,16 @@ pantalla_dos_jugadores:              ;Imprime en una nueva pantalla las
     mov_cursor 13,0
     imprimir_puntaje puntaje1a
     imprimir_puntaje puntaje1b 
-   
+    imprimir_puntaje puntaje1c
+    
     mov_cursor 18,0
     color_letra 05h,car2
     imprimir_var car2
     imprimir puntos
     mov_cursor 20,0
     imprimir_puntaje puntaje2a
-    imprimir_puntaje puntaje2b                           
+    imprimir_puntaje puntaje2b
+    imprimir_puntaje puntaje2c                           
                                
     mov_cursor 0,23
     colores 0ch 
@@ -385,6 +387,7 @@ pantalla_tres_jugadores:              ;Imprime en una nueva pantalla las
     mov_cursor 13,0
     imprimir_puntaje puntaje1a
     imprimir_puntaje puntaje1b
+    imprimir_puntaje puntaje1c
     
     mov_cursor 18,0 
     color_letra 05h,car2
@@ -392,7 +395,8 @@ pantalla_tres_jugadores:              ;Imprime en una nueva pantalla las
     imprimir puntos
     mov_cursor 20,0
     imprimir_puntaje puntaje2a
-    imprimir_puntaje puntaje2b
+    imprimir_puntaje puntaje2b 
+    imprimir_puntaje puntaje2c
     
     mov_cursor 25,0
     color_letra 06h,car3
@@ -400,7 +404,8 @@ pantalla_tres_jugadores:              ;Imprime en una nueva pantalla las
     imprimir puntos
     mov_cursor 27,0
     imprimir_puntaje puntaje3a
-    imprimir_puntaje puntaje3b 
+    imprimir_puntaje puntaje3b
+    imprimir_puntaje puntaje3c 
    
     mov_cursor 0,23
     colores 0ch 
@@ -670,35 +675,7 @@ comprobar_topos_rojos:           ;Establece posicion del cursor para imprimir el
     
     mov al,car_topo
     cmp comparar_caracter,al
-    je  fila_random_rojos
-    
-    
-    ;sub comparar_columna,1
-;    mov_cursor comparar_columna,comparar_fila
-;    mov al,car_topo
-;    cmp comparar_caracter,al
-;    je  fila_random_rojos
-;    
-;    add comparar_columna,2
-;    mov_cursor comparar_columna,comparar_fila
-;    mov al,car_topo
-;    cmp comparar_caracter,al
-;    je  fila_random_rojos
-;    
-;    
-;    sub comparar_columna,1
-;    sub comparar_fila,1
-;    mov_cursor comparar_columna,comparar_fila
-;    mov al,car_topo
-;    cmp comparar_caracter,al
-;    je  fila_random_rojos
-;    
-;    
-;    add comparar_fila,2
-;    mov_cursor comparar_columna,comparar_fila
-;    mov al,car_topo
-;    cmp comparar_caracter,al
-;    je  fila_random_rojos   
+    je  fila_random_rojos  
     
     mov_cursor columna,fila
                           
@@ -806,35 +783,7 @@ comprobar_topos_azules:           ;Establece posicion del cursor para imprimir e
     
     mov al,car_topo
     cmp comparar_caracter,al
-    je  fila_random_azules
-    
-    
-   ; sub comparar_columna,1
-;    mov_cursor comparar_columna,comparar_fila
-;    mov al,car_topo
-;    cmp comparar_caracter,al
-;    je  fila_random_rojos
-;    
-;    add comparar_columna,2
-;    mov_cursor comparar_columna,comparar_fila
-;    mov al,car_topo
-;    cmp comparar_caracter,al
-;    je  fila_random_rojos
-;    
-;    
-;    sub comparar_columna,1
-;    sub comparar_fila,1
-;    mov_cursor comparar_columna,comparar_fila
-;    mov al,car_topo
-;    cmp comparar_caracter,al
-;    je  fila_random_rojos
-;    
-;    
-;    add comparar_fila,2
-;    mov_cursor comparar_columna,comparar_fila
-;    mov al,car_topo
-;    cmp comparar_caracter,al
-;    je  fila_random_rojos   
+    je  fila_random_azules  
     
     mov_cursor columna,fila      
     
@@ -905,17 +854,17 @@ mouse:
 
 comparar_op2:
     
-    ;cmp al,76
-;    je  rendirse
-;    
-;    cmp al,108
-;    je  rendirse
-;    
+    cmp al,76
+    je  rendirse
+    
+    cmp al,108
+    je  rendirse
+    
     cmp al,82
-    je  reset
+    je  reset_nivel
     
     cmp al,114
-    je  reset
+    je  reset_nivel
     
     cmp al,81
     je  salir
@@ -928,10 +877,10 @@ comparar_op2:
 comparar_op3:
     
     cmp al,82
-    je  reset
+    je  reset_nivel
     
     cmp al,114
-    je  reset
+    je  reset_nivel
     
     cmp al,81
     je  salir
@@ -1114,9 +1063,9 @@ comparar_pase_tres_jugadores:
 
 comparar_puntajes_dos:
 
-    mov al,puntaje2c
+    mov al,puntaje2d
     
-    cmp puntaje1c,al
+    cmp puntaje1d,al
     je  empate_dos_jugadores
     jg  gana_jugador1_dos_jugadores
     jl  gana_jugador2_dos_jugadores
@@ -1132,19 +1081,23 @@ empate_dos_jugadores:
    mov_cursor 10,9
    imprimir estad_jp 
    
-   mov_cursor 10,11
+   mov_cursor 13,11
    imprimir_caracter car1
-   mov_cursor 21,11
+   mov_cursor 23,11
    imprimir_puntaje puntaje1a
-   mov_cursor 22,11
-   imprimir_puntaje puntaje1b
+   mov_cursor 24,11
+   imprimir_puntaje puntaje1b 
+   mov_cursor 25,11
+   imprimir_puntaje puntaje1c 
    
-   mov_cursor 10,13
+   mov_cursor 13,13
    imprimir_caracter car2
-   mov_cursor 21,13
+   mov_cursor 23,13
    imprimir_puntaje puntaje2a
-   mov_cursor 22,13
-   imprimir_puntaje puntaje2b
+   mov_cursor 24,13
+   imprimir_puntaje puntaje2b 
+   mov_cursor 25,13
+   imprimir_puntaje puntaje2c
     
    mov_cursor 12,15
    imprimir empata2
@@ -1167,10 +1120,10 @@ esperar_letra_fin_juego:
    je salir
    
    cmp al,86
-   je reset
+   je volver_a_jugar
    
    cmp al,118
-   je reset
+   je volver_a_jugar
    
    jmp esperar_letra_fin_juego  
 
@@ -1186,19 +1139,23 @@ gana_jugador1_dos_jugadores:
    mov_cursor 10,9
    imprimir estad_jp 
    
-   mov_cursor 10,11
-   imprimir_caracter car1
-   mov_cursor 21,11
-   imprimir_puntaje puntaje1a
-   mov_cursor 22,11
-   imprimir_puntaje puntaje1b
+   mov_cursor 13,11
+   imprimir_caracter_magenta car1
+   mov_cursor 23,11
+   imprimir_puntaje_magenta puntaje1a
+   mov_cursor 24,11
+   imprimir_puntaje_magenta puntaje1b 
+   mov_cursor 25,11
+   imprimir_puntaje_magenta puntaje1c 
    
-   mov_cursor 10,13
+   mov_cursor 13,13
    imprimir_caracter car2
-   mov_cursor 21,13
+   mov_cursor 23,13
    imprimir_puntaje puntaje2a
-   mov_cursor 22,13
-   imprimir_puntaje puntaje2b
+   mov_cursor 24,13
+   imprimir_puntaje puntaje2b 
+   mov_cursor 25,13
+   imprimir_puntaje puntaje2c
     
 
    mov_cursor 5,18
@@ -1219,20 +1176,23 @@ gana_jugador2_dos_jugadores:
    imprimir estad_jp
       
    
-   mov_cursor 10,11
-   imprimir_caracter car2
-   mov_cursor 21,11
-   imprimir_puntaje puntaje2a
-   mov_cursor 22,11
-   imprimir_puntaje puntaje2b
-    
+   mov_cursor 13,11
+   imprimir_caracter_magenta car2
+   mov_cursor 23,11
+   imprimir_puntaje_magenta puntaje2a
+   mov_cursor 24,11
+   imprimir_puntaje_magenta puntaje2b 
+   mov_cursor 25,11
+   imprimir_puntaje_magenta puntaje2c 
    
-   mov_cursor 10,13
+   mov_cursor 13,13
    imprimir_caracter car1
-   mov_cursor 21,13
+   mov_cursor 23,13
    imprimir_puntaje puntaje1a
-   mov_cursor 22,13
-   imprimir_puntaje puntaje1b
+   mov_cursor 24,13
+   imprimir_puntaje puntaje1b 
+   mov_cursor 25,13
+   imprimir_puntaje puntaje1c
    
 
    mov_cursor 5,18
@@ -1260,58 +1220,101 @@ comparar_puntajes_tres:
     je  pos_312   
     
     cmp comparar3,06h
-    je  pos_321
+    je  pos_321 
+    
+    cmp comparar3,07h
+    je  pos_1e2e3 
+    
+    cmp comparar3,08h
+    je  pos_1e23
+    
+    cmp comparar3,09h
+    je  pos_1e32
+    
+    cmp comparar3,10h
+    je  pos_12e3 
+    
+    cmp comparar3,11h
+    je  pos_21e3
+    
+    cmp comparar3,12h
+    je  pos_31e2
+    
    
     
 comparar_1y2:
-    mov al,puntaje2c
+    mov al,puntaje2d
                  
-    cmp puntaje1c,al     
+    cmp puntaje1d,al     
     jle  comparar_puntajes_tres 
     
     ret
 comparar_2y3:    
-    mov al,puntaje3c
+    mov al,puntaje3d
                  
-    cmp puntaje2c,al     
+    cmp puntaje2d,al     
     jle  comparar_puntajes_tres
     
     ret
 comparar_1y3:
 
-    mov al,puntaje3c
+    mov al,puntaje3d
                  
-    cmp puntaje1c,al     
+    cmp puntaje1d,al     
     jle  comparar_puntajes_tres
     
     ret 
     
 comparar_2y1:
 
-    mov al,puntaje1c
+    mov al,puntaje1d
                  
-    cmp puntaje2c,al     
+    cmp puntaje2d,al     
     jle  comparar_puntajes_tres
     
     ret
     
 comparar_3y2:
 
-    mov al,puntaje2c
+    mov al,puntaje2d
                  
-    cmp puntaje3c,al     
+    cmp puntaje3d,al     
     jle  comparar_puntajes_tres
     
     ret 
     
 comparar_3y1:
 
-    mov al,puntaje1c
+    mov al,puntaje1d
                  
-    cmp puntaje3c,al     
+    cmp puntaje3d,al     
     jle  comparar_puntajes_tres
     
+    ret
+    
+comparar_igualdad_1y2:
+    mov al,puntaje2d
+    cmp puntaje1d,al
+    jnz  comparar_puntajes_tres
+    
+    ret
+        
+comparar_igualdad_1y3:
+    mov al,puntaje3d
+    cmp puntaje1d,al
+    jnz  comparar_puntajes_tres
+    
+    ret
+    
+comparar_igualdad_2y3:
+    mov al,puntaje3d
+    cmp puntaje2d,al
+    jnz  comparar_puntajes_tres
+    
     ret    
+        
+    
+        
          
 pos_123:
     add comparar3,1
@@ -1323,8 +1326,43 @@ pos_123:
     
      
 imprimir_123:
-   limpiar_pantalla 0fh
-   imprimir_estd_tres car1,puntaje1a,puntaje1b,car2,puntaje2a,puntaje2b,car3,puntaje3a,puntaje3b 
+   limpiar_pantalla 0fh 
+   
+   mov_cursor 14,6 
+   imprimir estad
+   
+   mov_cursor 10,9
+   imprimir estad_jp
+   
+   mov_cursor 13,11
+   imprimir_caracter_magenta car1
+   mov_cursor 23,11
+   imprimir_puntaje_magenta puntaje1a
+   mov_cursor 24,11
+   imprimir_puntaje_magenta puntaje1b 
+   mov_cursor 25,11
+   imprimir_puntaje_magenta puntaje1c 
+   
+   mov_cursor 13,13
+   imprimir_caracter car2
+   mov_cursor 23,13
+   imprimir_puntaje puntaje2a
+   mov_cursor 24,13
+   imprimir_puntaje puntaje2b 
+   mov_cursor 25,13
+   imprimir_puntaje puntaje2c 
+   
+   mov_cursor 13,15
+   imprimir_caracter car3
+   mov_cursor 23,15
+   imprimir_puntaje puntaje3a
+   mov_cursor 24,15
+   imprimir_puntaje puntaje3b 
+   mov_cursor 25,15
+   imprimir_puntaje puntaje3c
+   
+   mov_cursor 5,18
+   imprimir op_end
    
    jmp esperar_letra_fin_juego
    
@@ -1341,7 +1379,44 @@ pos_132:
      
 imprimir_132:
    limpiar_pantalla 0fh
-   imprimir_estd_tres car1,puntaje1a,puntaje1b,car3,puntaje3a,puntaje3b,car2,puntaje2a,puntaje2b 
+   
+   mov_cursor 14,6 
+   imprimir estad
+   
+   mov_cursor 10,9
+   imprimir estad_jp   
+   
+   mov_cursor 13,11
+   imprimir_caracter_magenta car1
+   mov_cursor 23,11
+   imprimir_puntaje_magenta puntaje1a
+   mov_cursor 24,11
+   imprimir_puntaje_magenta puntaje1b 
+   mov_cursor 25,11
+   imprimir_puntaje_magenta puntaje1c 
+   
+   mov_cursor 13,13
+   imprimir_caracter car3
+   mov_cursor 23,13
+   imprimir_puntaje puntaje3a
+   mov_cursor 24,13
+   imprimir_puntaje puntaje3b 
+   mov_cursor 25,13
+   imprimir_puntaje puntaje3c 
+   
+   mov_cursor 13,15
+   imprimir_caracter car2
+   mov_cursor 23,15
+   imprimir_puntaje puntaje2a
+   mov_cursor 24,15
+   imprimir_puntaje puntaje2b 
+   mov_cursor 25,15
+   imprimir_puntaje puntaje2c
+   
+   mov_cursor 5,18
+   imprimir op_end
+   
+   
     
    jmp esperar_letra_fin_juego 
     
@@ -1358,7 +1433,43 @@ pos_213:
      
 imprimir_213:
    limpiar_pantalla 0fh
-   imprimir_estd_tres car2,puntaje2a,puntaje2b,car1,puntaje1a,puntaje1b,car3,puntaje3a,puntaje3b 
+   
+   mov_cursor 14,6 
+   imprimir estad
+   
+   mov_cursor 10,9
+   imprimir estad_jp   
+   
+   mov_cursor 13,11
+   imprimir_caracter_magenta car2
+   mov_cursor 23,11
+   imprimir_puntaje_magenta puntaje2a
+   mov_cursor 24,11
+   imprimir_puntaje_magenta puntaje2b 
+   mov_cursor 25,11
+   imprimir_puntaje_magenta puntaje2c 
+   
+   mov_cursor 13,13
+   imprimir_caracter car1
+   mov_cursor 23,13
+   imprimir_puntaje puntaje1a
+   mov_cursor 24,13
+   imprimir_puntaje puntaje1b 
+   mov_cursor 25,13
+   imprimir_puntaje puntaje1c 
+   
+   mov_cursor 13,15
+   imprimir_caracter car3
+   mov_cursor 23,15
+   imprimir_puntaje puntaje3a
+   mov_cursor 24,15
+   imprimir_puntaje puntaje3b 
+   mov_cursor 25,15
+   imprimir_puntaje puntaje3c 
+   
+   mov_cursor 5,18
+   imprimir op_end
+   
    
    jmp esperar_letra_fin_juego
         
@@ -1375,7 +1486,43 @@ pos_231:
      
 imprimir_231:
    limpiar_pantalla 0fh
-   imprimir_estd_tres car2,puntaje2a,puntaje2b,car3,puntaje3a,puntaje3b,car1,puntaje1a,puntaje1b 
+    
+   mov_cursor 14,6 
+   imprimir estad
+   
+   mov_cursor 10,9
+   imprimir estad_jp    
+    
+   mov_cursor 13,11
+   imprimir_caracter_magenta car2
+   mov_cursor 23,11
+   imprimir_puntaje_magenta puntaje2a
+   mov_cursor 24,11
+   imprimir_puntaje_magenta puntaje2b 
+   mov_cursor 25,11
+   imprimir_puntaje_magenta puntaje2c 
+   
+   mov_cursor 13,13
+   imprimir_caracter car3
+   mov_cursor 23,13
+   imprimir_puntaje puntaje3a
+   mov_cursor 24,13
+   imprimir_puntaje puntaje3b 
+   mov_cursor 25,13
+   imprimir_puntaje puntaje3c 
+   
+   mov_cursor 13,15
+   imprimir_caracter car1
+   mov_cursor 23,15
+   imprimir_puntaje puntaje1a
+   mov_cursor 24,15
+   imprimir_puntaje puntaje1b 
+   mov_cursor 25,15
+   imprimir_puntaje puntaje1c 
+   
+   mov_cursor 5,18
+   imprimir op_end
+   
    
    jmp esperar_letra_fin_juego
    
@@ -1384,7 +1531,7 @@ imprimir_231:
 pos_312:
     add  comparar3,1
     call comparar_3y1
-    call comparar_3y2
+    call comparar_1y2
     call comparar_3y2
     
     jmp imprimir_312     
@@ -1392,8 +1539,44 @@ pos_312:
      
 imprimir_312:
    limpiar_pantalla 0fh
-   imprimir_estd_tres car3,puntaje3a,puntaje3b,car1,puntaje1a,puntaje1b,car2,puntaje2a,puntaje2b 
-
+   
+   mov_cursor 14,6 
+   imprimir estad
+   
+   mov_cursor 10,9
+   imprimir estad_jp   
+   
+   mov_cursor 13,11
+   imprimir_caracter_magenta car3
+   mov_cursor 23,11
+   imprimir_puntaje_magenta puntaje3a
+   mov_cursor 24,11
+   imprimir_puntaje_magenta puntaje3b 
+   mov_cursor 25,11
+   imprimir_puntaje_magenta puntaje3c 
+   
+   mov_cursor 13,13
+   imprimir_caracter car1
+   mov_cursor 23,13
+   imprimir_puntaje puntaje1a
+   mov_cursor 24,13
+   imprimir_puntaje puntaje1b 
+   mov_cursor 25,13        
+   imprimir_puntaje puntaje1c 
+   
+   mov_cursor 13,15
+   imprimir_caracter car2
+   mov_cursor 23,15
+   imprimir_puntaje puntaje2a
+   mov_cursor 24,15
+   imprimir_puntaje puntaje2b 
+   mov_cursor 25,15
+   imprimir_puntaje puntaje2c  
+   
+   mov_cursor 5,18
+   imprimir op_end
+   
+   
    jmp esperar_letra_fin_juego
    
 ;***************************    
@@ -1409,41 +1592,351 @@ pos_321:
      
 imprimir_321:
    limpiar_pantalla 0fh
-   imprimir_estd_tres car3,puntaje3a,puntaje3b,car2,puntaje2a,puntaje2b,car1,puntaje1a,puntaje1b 
+   
+   mov_cursor 14,6 
+   imprimir estad
+   
+   mov_cursor 10,9
+   imprimir estad_jp   
+   
+   mov_cursor 13,11
+   imprimir_caracter_magenta car3
+   mov_cursor 23,11
+   imprimir_puntaje_magenta puntaje3a
+   mov_cursor 24,11
+   imprimir_puntaje_magenta puntaje3b 
+   mov_cursor 25,11
+   imprimir_puntaje_magenta puntaje3c 
+   
+   mov_cursor 13,13
+   imprimir_caracter car2
+   mov_cursor 23,13
+   imprimir_puntaje puntaje2a
+   mov_cursor 24,13
+   imprimir_puntaje puntaje2b 
+   mov_cursor 25,13
+   imprimir_puntaje puntaje2c 
+   
+   mov_cursor 13,15
+   imprimir_caracter car1
+   mov_cursor 23,15
+   imprimir_puntaje puntaje1a
+   mov_cursor 24,15
+   imprimir_puntaje puntaje1b 
+   mov_cursor 25,15
+   imprimir_puntaje puntaje1c 
+   
+   mov_cursor 5,18
+   imprimir op_end
+   
    
    jmp esperar_letra_fin_juego                  
 
-;; 123.
-;; 132.
-;; 213.
-;; 231.
-;; 312
-;; 321
 
+pos_1e2e3:
+    add  comparar3,1
+    call comparar_igualdad_1y2
+    call comparar_igualdad_2y3
+    
+    jmp imprimir_1e2e3    
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+imprimir_1e2e3:
+ 
+   limpiar_pantalla 0fh   
+ 
+   mov_cursor 14,6 
+   imprimir estad
    
+   mov_cursor 10,9
+   imprimir estad_jp 
+   
+   mov_cursor 13,11
+   imprimir_caracter car1
+   mov_cursor 23,11
+   imprimir_puntaje puntaje1a
+   mov_cursor 24,11
+   imprimir_puntaje puntaje1b 
+   mov_cursor 25,11
+   imprimir_puntaje puntaje1c 
+   
+   mov_cursor 13,13
+   imprimir_caracter car2
+   mov_cursor 23,13
+   imprimir_puntaje puntaje2a
+   mov_cursor 24,13
+   imprimir_puntaje puntaje2b 
+   mov_cursor 25,13
+   imprimir_puntaje puntaje2c     
+   
+   mov_cursor 13,15
+   imprimir_caracter car3
+   mov_cursor 23,15
+   imprimir_puntaje puntaje3a
+   mov_cursor 24,15
+   imprimir_puntaje puntaje3b 
+   mov_cursor 25,15
+   imprimir_puntaje puntaje3c   
+
+    
+   mov_cursor 12,17
+   imprimir empata2
+   
+   mov_cursor 5,18
+   imprimir op_end  
+    
+   jmp esperar_letra_fin_juego
+
+
+pos_1e23:
+    add  comparar3,1
+    call comparar_igualdad_1y2
+    call comparar_2y3
+    
+    jmp imprimir_1e23    
+
+imprimir_1e23:
+ 
+   limpiar_pantalla 0fh   
+ 
+   mov_cursor 14,6 
+   imprimir estad
+   
+   mov_cursor 10,9
+   imprimir estad_jp 
+   
+   mov_cursor 13,11
+   imprimir_caracter_magenta car1
+   mov_cursor 23,11
+   imprimir_puntaje_magenta puntaje1a
+   mov_cursor 24,11
+   imprimir_puntaje_magenta puntaje1b 
+   mov_cursor 25,11
+   imprimir_puntaje_magenta puntaje1c 
+   
+   mov_cursor 13,13
+   imprimir_caracter_magenta car2
+   mov_cursor 23,13
+   imprimir_puntaje_magenta puntaje2a
+   mov_cursor 24,13
+   imprimir_puntaje_magenta puntaje2b 
+   mov_cursor 25,13
+   imprimir_puntaje_magenta puntaje2c     
+   
+   mov_cursor 13,15
+   imprimir_caracter car3
+   mov_cursor 23,15
+   imprimir_puntaje puntaje3a
+   mov_cursor 24,15
+   imprimir_puntaje puntaje3b 
+   mov_cursor 25,15
+   imprimir_puntaje puntaje3c
+   
+   mov_cursor 5,18
+   imprimir op_end  
+    
+   jmp esperar_letra_fin_juego
+
+
+pos_1e32:
+    add  comparar3,1
+    call comparar_igualdad_1y3
+    call comparar_3y2
+    
+    jmp imprimir_1e32    
+
+imprimir_1e32:
+ 
+   limpiar_pantalla 0fh   
+ 
+   mov_cursor 14,6 
+   imprimir estad
+   
+   mov_cursor 10,9
+   imprimir estad_jp 
+   
+   mov_cursor 13,11
+   imprimir_caracter_magenta car1
+   mov_cursor 23,11
+   imprimir_puntaje_magenta puntaje1a
+   mov_cursor 24,11
+   imprimir_puntaje_magenta puntaje1b 
+   mov_cursor 25,11
+   imprimir_puntaje_magenta puntaje1c 
+   
+   mov_cursor 13,13
+   imprimir_caracter_magenta car3
+   mov_cursor 23,13
+   imprimir_puntaje_magenta puntaje3a
+   mov_cursor 24,13
+   imprimir_puntaje_magenta puntaje3b 
+   mov_cursor 25,13
+   imprimir_puntaje_magenta puntaje3c     
+   
+   mov_cursor 13,15
+   imprimir_caracter car2
+   mov_cursor 23,15
+   imprimir_puntaje puntaje2a
+   mov_cursor 24,15
+   imprimir_puntaje puntaje2b 
+   mov_cursor 25,15
+   imprimir_puntaje puntaje2c
+   
+   mov_cursor 5,18
+   imprimir op_end  
+    
+   jmp esperar_letra_fin_juego
+
+pos_12e3:
+    add  comparar3,1 
+    call comparar_1y2
+    call comparar_igualdad_2y3
+    
+    
+    jmp imprimir_12e3    
+
+imprimir_12e3:
+ 
+   limpiar_pantalla 0fh   
+ 
+   mov_cursor 14,6 
+   imprimir estad
+   
+   mov_cursor 10,9
+   imprimir estad_jp 
+   
+   mov_cursor 13,11
+   imprimir_caracter_magenta car1
+   mov_cursor 23,11
+   imprimir_puntaje_magenta puntaje1a
+   mov_cursor 24,11
+   imprimir_puntaje_magenta puntaje1b 
+   mov_cursor 25,11
+   imprimir_puntaje_magenta puntaje1c 
+   
+   mov_cursor 13,13
+   imprimir_caracter car2
+   mov_cursor 23,13
+   imprimir_puntaje puntaje2a
+   mov_cursor 24,13
+   imprimir_puntaje puntaje2b 
+   mov_cursor 25,13
+   imprimir_puntaje puntaje2c     
+   
+   mov_cursor 13,15
+   imprimir_caracter car3
+   mov_cursor 23,15
+   imprimir_puntaje puntaje3a
+   mov_cursor 24,15
+   imprimir_puntaje puntaje3b 
+   mov_cursor 25,15
+   imprimir_puntaje puntaje3c
+   
+   mov_cursor 5,18
+   imprimir op_end  
+    
+   jmp esperar_letra_fin_juego
+
+pos_21e3:
+    add  comparar3,1 
+    call comparar_2y1
+    call comparar_igualdad_1y3
+    
+    
+    jmp imprimir_21e3    
+
+imprimir_21e3:
+ 
+   limpiar_pantalla 0fh   
+ 
+   mov_cursor 14,6 
+   imprimir estad
+   
+   mov_cursor 10,9
+   imprimir estad_jp 
+   
+   mov_cursor 13,11
+   imprimir_caracter_magenta car2
+   mov_cursor 23,11
+   imprimir_puntaje_magenta puntaje2a
+   mov_cursor 24,11
+   imprimir_puntaje_magenta puntaje2b 
+   mov_cursor 25,11
+   imprimir_puntaje_magenta puntaje2c 
+   
+   mov_cursor 13,13
+   imprimir_caracter car1
+   mov_cursor 23,13
+   imprimir_puntaje puntaje1a
+   mov_cursor 24,13
+   imprimir_puntaje puntaje1b 
+   mov_cursor 25,13
+   imprimir_puntaje puntaje1c     
+   
+   mov_cursor 13,15
+   imprimir_caracter car3
+   mov_cursor 23,15
+   imprimir_puntaje puntaje3a
+   mov_cursor 24,15
+   imprimir_puntaje puntaje3b 
+   mov_cursor 25,15
+   imprimir_puntaje puntaje3c
+   
+   mov_cursor 5,18
+   imprimir op_end  
+    
+   jmp esperar_letra_fin_juego
+
+pos_31e2:
+    add  comparar3,1 
+    call comparar_2y1
+    call comparar_igualdad_1y3
+    
+    
+    jmp imprimir_31e2    
+
+imprimir_31e2:
+ 
+   limpiar_pantalla 0fh   
+ 
+   mov_cursor 14,6 
+   imprimir estad
+   
+   mov_cursor 10,9
+   imprimir estad_jp 
+   
+   mov_cursor 13,11
+   imprimir_caracter_magenta car3
+   mov_cursor 23,11
+   imprimir_puntaje_magenta puntaje3a
+   mov_cursor 24,11
+   imprimir_puntaje_magenta puntaje3b 
+   mov_cursor 25,11
+   imprimir_puntaje_magenta puntaje3c 
+   
+   mov_cursor 13,13
+   imprimir_caracter car1
+   mov_cursor 23,13
+   imprimir_puntaje puntaje1a
+   mov_cursor 24,13
+   imprimir_puntaje puntaje1b 
+   mov_cursor 25,13
+   imprimir_puntaje puntaje1c     
+   
+   mov_cursor 13,15
+   imprimir_caracter car2
+   mov_cursor 23,15
+   imprimir_puntaje puntaje2a
+   mov_cursor 24,15
+   imprimir_puntaje puntaje2b 
+   mov_cursor 25,15
+   imprimir_puntaje puntaje2c
+   
+   mov_cursor 5,18
+   imprimir op_end  
+    
+   jmp esperar_letra_fin_juego
+
+  
 
 comparar_sumar_puntaje_j1:
     
@@ -1454,27 +1947,45 @@ comparar_sumar_puntaje_j1:
     
 sumar_puntaje_j1:
 
+    inc puntaje1d
+    
+    cmp puntaje1c,9d
+    jge incrementar_puntaje1b
+    
     inc puntaje1c
-    
-    cmp puntaje1b,9d
-    jge incrementar_puntaje1a
-    
-    inc puntaje1b
-    mov_cursor 14,0
-    imprimir_puntaje puntaje1b  
+    mov_cursor 15,0
+    imprimir_puntaje puntaje1c  
     
     jmp mouse
 
-incrementar_puntaje1a:
+incrementar_puntaje1b:
    
-    mov puntaje1b,0
-    inc puntaje1a
-   
-    mov_cursor 13,0
-    imprimir_puntaje puntaje1a
+    mov puntaje1c,0
+    inc puntaje1b
+    
+    cmp puntaje1b,9d
+    jge incrementar_puntaje1a
    
     mov_cursor 14,0
     imprimir_puntaje puntaje1b
+   
+    mov_cursor 15,0
+    imprimir_puntaje puntaje1c
+   
+    jmp mouse 
+
+incrementar_puntaje1a:    
+    mov puntaje1b,0
+    inc puntaje1a
+    
+    mov_cursor 13,0
+    imprimir_puntaje puntaje1a
+    
+    mov_cursor 14,0
+    imprimir_puntaje puntaje1b
+   
+    mov_cursor 15,0
+    imprimir_puntaje puntaje1c
    
     jmp mouse
    
@@ -1487,19 +1998,34 @@ comparar_sumar_puntaje_j2:
     
 sumar_puntaje_j2:
 
+    inc puntaje2d
+    
+    cmp puntaje2c,9d
+    jge incrementar_puntaje2b
+    
     inc puntaje2c
-    
-    cmp puntaje2b,9d
-    jge incrementar_puntaje2a    
-    
-    inc puntaje2b
-    mov_cursor 21,0
-    imprimir_puntaje puntaje2b 
+    mov_cursor 22,0
+    imprimir_puntaje puntaje2c  
     
     jmp mouse
 
-incrementar_puntaje2a:
+incrementar_puntaje2b:
+   
+    mov puntaje2c,0
+    inc puntaje2b
+    
+    cmp puntaje2b,9d
+    jge incrementar_puntaje2a
+   
+    mov_cursor 21,0
+    imprimir_puntaje puntaje2b
+   
+    mov_cursor 22,0
+    imprimir_puntaje puntaje2c
+   
+    jmp mouse 
 
+incrementar_puntaje2a:    
     mov puntaje2b,0
     inc puntaje2a
     
@@ -1507,7 +2033,10 @@ incrementar_puntaje2a:
     imprimir_puntaje puntaje2a
     
     mov_cursor 21,0
-    imprimir_puntaje puntaje2b 
+    imprimir_puntaje puntaje2b
+   
+    mov_cursor 22,0
+    imprimir_puntaje puntaje2c
    
     jmp mouse
 
@@ -1521,19 +2050,34 @@ comparar_sumar_puntaje_j3:
     
 sumar_puntaje_j3:
 
+    inc puntaje3d
+    
+    cmp puntaje3c,9d
+    jge incrementar_puntaje3b
+    
     inc puntaje3c
+    mov_cursor 29,0
+    imprimir_puntaje puntaje3c  
     
-    cmp puntaje2b,9d
-    jge incrementar_puntaje3a
-    
+    jmp mouse
+
+incrementar_puntaje3b:
+   
+    mov puntaje3c,0
     inc puntaje3b
+    
+    cmp puntaje3b,9d
+    jge incrementar_puntaje3a
+   
     mov_cursor 28,0
     imprimir_puntaje puntaje3b
-    
-    jmp mouse             
+   
+    mov_cursor 29,0
+    imprimir_puntaje puntaje3c
+   
+    jmp mouse 
 
-incrementar_puntaje3a:
-
+incrementar_puntaje3a:    
     mov puntaje3b,0
     inc puntaje3a
     
@@ -1543,6 +2087,8 @@ incrementar_puntaje3a:
     mov_cursor 28,0
     imprimir_puntaje puntaje3b
    
+    mov_cursor 29,0
+    imprimir_puntaje puntaje3c
    
     jmp mouse
 
@@ -1556,23 +2102,42 @@ comparar_restar_puntaje_j1:
 
 restar_puntaje_j1:             
 
-    dec puntaje1c 
+    dec puntaje1d 
     
-    cmp puntaje1b,0
-    je decrementar_puntaje1a
+    cmp puntaje1c,0
+    je decrementar_puntaje1b
     
-    dec puntaje1b
-    mov_cursor 14,0
-    imprimir_puntaje puntaje1b
+    dec puntaje1c
+    mov_cursor 15,0
+    imprimir_puntaje puntaje1c
     
     jmp mouse
 
-decrementar_puntaje1a:
+decrementar_puntaje1b:
     
+    cmp puntaje1b,0
+    je  decrementar_puntaje1a
+    
+    mov puntaje1c,9
+    dec puntaje1a
+    
+    dec puntaje1b
+    mov_cursor 15,0
+    imprimir_puntaje puntaje1c
+    
+    mov_cursor 14,0
+    imprimir_puntaje puntaje1b
+   
+   
+    jmp mouse
+
+decrementar_puntaje1a: 
+
     cmp puntaje1a,0
-    je  mantener_puntaje_cero_j1
+    je  mantener_puntaje_cero_j2
     
     mov puntaje1b,9
+    mov puntaje1c,9
     dec puntaje1a
     
     mov_cursor 13,0
@@ -1580,8 +2145,10 @@ decrementar_puntaje1a:
     
     mov_cursor 14,0
     imprimir_puntaje puntaje1b
-   
-   
+    
+    mov_cursor 15,0
+    imprimir_puntaje puntaje1c
+    
     jmp mouse
 
 comparar_restar_puntaje_j2:
@@ -1593,34 +2160,53 @@ comparar_restar_puntaje_j2:
 
 restar_puntaje_j2:             
 
-    dec puntaje2c 
+    dec puntaje2d 
     
-    cmp puntaje2b,0
-    je decrementar_puntaje2a
+    cmp puntaje2c,0
+    je decrementar_puntaje2b
     
-    dec puntaje2b
-    mov_cursor 21,0
-    imprimir_puntaje puntaje2b
+    dec puntaje2c
+    mov_cursor 22,0
+    imprimir_puntaje puntaje2c
     
     jmp mouse
 
-decrementar_puntaje2a:
+decrementar_puntaje2b:
     
+    cmp puntaje2b,0
+    je  decrementar_puntaje2a
+    
+    mov puntaje2c,9
+    dec puntaje2a
+    
+    dec puntaje2b
+    mov_cursor 22,0
+    imprimir_puntaje puntaje2c
+    
+    mov_cursor 21,0
+    imprimir_puntaje puntaje2b
+   
+   
+    jmp mouse
+
+decrementar_puntaje2a: 
+
     cmp puntaje2a,0
     je  mantener_puntaje_cero_j2
     
     mov puntaje2b,9
+    mov puntaje2c,9
     dec puntaje2a
     
     mov_cursor 20,0
     imprimir_puntaje puntaje2a
-   
-   
     
     mov_cursor 21,0
     imprimir_puntaje puntaje2b
-   
-   
+    
+    mov_cursor 22,0
+    imprimir_puntaje puntaje2c
+    
     jmp mouse
 
 comparar_restar_puntaje_j3:
@@ -1632,33 +2218,53 @@ comparar_restar_puntaje_j3:
     
 restar_puntaje_j3:             
 
-    dec puntaje3c 
+    dec puntaje3d 
     
-    cmp puntaje3b,0
-    je decrementar_puntaje3a
+    cmp puntaje3c,0
+    je decrementar_puntaje3b
     
-    dec puntaje3b
-    mov_cursor 28,0
-    imprimir_puntaje puntaje3b
+    dec puntaje3c
+    mov_cursor 29,0
+    imprimir_puntaje puntaje3c
     
     jmp mouse
 
-decrementar_puntaje3a:
+decrementar_puntaje3b:
     
+    cmp puntaje3b,0
+    je  decrementar_puntaje3a
+    
+    mov puntaje3c,9
+    dec puntaje3a
+    
+    dec puntaje3b
+    mov_cursor 29,0
+    imprimir_puntaje puntaje3c
+    
+    mov_cursor 28,0
+    imprimir_puntaje puntaje3b
+   
+   
+    jmp mouse
+
+decrementar_puntaje3a: 
+
     cmp puntaje3a,0
     je  mantener_puntaje_cero_j3
     
-    mov puntaje3b,9
+    mov puntaje3b,9 
+    mov puntaje3c,9
     dec puntaje3a
     
     mov_cursor 27,0
     imprimir_puntaje puntaje3a
-   
-   
     
     mov_cursor 28,0
     imprimir_puntaje puntaje3b
-   
+    
+    mov_cursor 29,0
+    imprimir_puntaje puntaje3c
+    
     jmp mouse
 
 mantener_puntaje_cero_j1:
@@ -1666,12 +2272,16 @@ mantener_puntaje_cero_j1:
    mov puntaje1a,0
    mov puntaje1b,0
    mov puntaje1c,0
+   mov puntaje1d,0
    
    mov_cursor 13,0
    imprimir_puntaje puntaje1a
     
    mov_cursor 14,0
    imprimir_puntaje puntaje1b
+   
+   mov_cursor 15,0
+   imprimir_puntaje puntaje1c
       
    jmp mouse 
    
@@ -1679,13 +2289,17 @@ mantener_puntaje_cero_j2:
    
    mov puntaje2a,0
    mov puntaje2b,0
-   mov puntaje2c,0
+   mov puntaje2c,0 
+   mov puntaje2d,0
    
    mov_cursor 20,0
    imprimir_puntaje puntaje2a
     
    mov_cursor 21,0
    imprimir_puntaje puntaje2b
+   
+   mov_cursor 22,0
+   imprimir_puntaje puntaje2c
       
    jmp mouse    
 
@@ -1693,22 +2307,23 @@ mantener_puntaje_cero_j3:
    
    mov puntaje3a,0
    mov puntaje3b,0
-   mov puntaje3c,0
+   mov puntaje3c,0 
+   mov puntaje3d,0
    
    mov_cursor 27,0
    imprimir_puntaje puntaje3a
     
    mov_cursor 28,0
    imprimir_puntaje puntaje3b
+   
+   mov_cursor 29,0
+   imprimir_puntaje puntaje3c
       
    jmp mouse 
 
 
 
-
-
-
-reset:
+volver_a_jugar:
 
     mov player1,1       
     mov player2,0              
@@ -1748,22 +2363,148 @@ reset:
     mov fila_linea,7    
     mov cant_filas,0
     mov segundos,0
-    mov cont_apariciones,0    
+    mov cont_apariciones,0 
+    mov comparar_caracter,0   
     mov comparar_fila,0
-    mov comparar_columna,0
+    mov comparar_columna,0 
+    mov comparar3,1
  
-    cmp var_cant,50
-    je  pide_caracter_dos_jugadores
+    jmp pide_caracter_topo 
+
+reset_nivel:
+    mov_cursor 7,21 
+    imprimir reset
     
-    cmp var_cant,51
-    je  pide_caracter_tres_jugadores
+    mov_cursor 32,21
+    lee_caracter
     
-    jmp pide_caracter_topo
+    mov nivel,al
+    sub nivel,30h
+    
+    cmp al,49
+    je  reset_nivel2
+    
+    cmp al,50
+    je  reset_nivel2
+    
+    cmp al,51
+    je  reset_nivel2
+    
+    cmp al,52
+    je  reset_nivel2
+    
+    cmp al,53
+    je  reset_nivel2 
+    
+    beep
+    
+    jmp reset_nivel 
+    
+
+    
+reset_nivel2:
+   mov cont_topos,0
+   mov segundos,0
+   mov cont_apariciones,0     
+   mov cant_filas,0
+   mov comparar3,1
+   
+   mov ax,0600h   
+   mov bh,0fh     
+   mov cx,1400h   
+   mov dx,1528h   
+   int 10h
+   
+   mov ax,0600h   
+   mov bh,0fh     
+   mov cx,070eh   
+   mov dx,1017H   
+   int 10h
+   
+   
+   jmp niveles
  
 rendirse:
 
+    cmp cop_player1,1d
+    je  rendir_player1
+    
+    jmp rendir_player2
+
+rendir_player2:
+
+   limpiar_pantalla 0fh   
+  
+   mov_cursor 14,6 
+   imprimir estad
+   
+   mov_cursor 10,9
+   imprimir estad_jp 
+   
+   mov_cursor 13,11
+   imprimir_caracter_magenta car1
+   mov_cursor 23,11
+   imprimir_puntaje_magenta puntaje1a
+   mov_cursor 24,11
+   imprimir_puntaje_magenta puntaje1b 
+   mov_cursor 25,11
+   imprimir_puntaje_magenta puntaje1c 
+   
+   mov_cursor 13,13
+   imprimir_caracter car2
+   mov_cursor 23,13
+   imprimir_puntaje puntaje2a
+   mov_cursor 24,13
+   imprimir_puntaje puntaje2b 
+   mov_cursor 25,13
+   imprimir_puntaje puntaje2c
+   
+   mov_cursor 7,15
+   imprimir rendir2 
+
+   mov_cursor 5,18
+   imprimir op_end  
+    
+   jmp esperar_letra_fin_juego
 
 
+
+rendir_player1:
+
+   limpiar_pantalla 0fh   
+  
+   mov_cursor 14,6 
+   imprimir estad
+   
+   mov_cursor 10,9
+   imprimir estad_jp
+      
+   
+   mov_cursor 13,11
+   imprimir_caracter_magenta car2
+   mov_cursor 23,11
+   imprimir_puntaje_magenta puntaje2a
+   mov_cursor 24,11
+   imprimir_puntaje_magenta puntaje2b 
+   mov_cursor 25,11
+   imprimir_puntaje_magenta puntaje2c 
+   
+   mov_cursor 13,13
+   imprimir_caracter car1
+   mov_cursor 23,13
+   imprimir_puntaje puntaje1a
+   mov_cursor 24,13
+   imprimir_puntaje puntaje1b 
+   mov_cursor 25,13
+   imprimir_puntaje puntaje1c
+   
+   mov_cursor 7,15
+   imprimir rendir1
+
+   mov_cursor 5,18
+   imprimir op_end  
+    
+   jmp esperar_letra_fin_juego     
 
 
                                              
